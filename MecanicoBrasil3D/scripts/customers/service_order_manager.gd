@@ -38,7 +38,13 @@ func create_order(
 ) -> Dictionary:
 
     if data_manager == null:
-        return {"success": false, "message": "Sistema nao inicializado."}
+        return {"success": false, "message": "Catalogos nao carregados."}
+
+    if customer_manager == null or vehicle_manager == null:
+        return {"success": false, "message": "Sistema de clientes ou veiculos ausente."}
+
+    if defect_manager == null or repair_manager == null:
+        return {"success": false, "message": "Sistema de reparos ausente."}
 
     var customer := customer_manager.get_customer(customer_id)
     var vehicle := vehicle_manager.get_vehicle_instance(vehicle_instance_id)
@@ -53,18 +59,40 @@ func create_order(
     if defect.is_empty():
         return {"success": false, "message": "Defeito nao encontrado."}
 
-    if not defect_id in defect_manager.get_vehicle_defects(vehicle_instance_id):
-        return {"success": false, "message": "Defeito nao pertence a esse veiculo."}
+    var vehicle_defects := defect_manager.get_vehicle_defects(
+        vehicle_instance_id
+    )
+
+    if not vehicle_defects.has(defect_id):
+        return {
+            "success": false,
+            "message": "Esse defeito nao pertence ao veiculo."
+        }
+
+    # Impede duas ordens abertas para o mesmo defeito.
+    for existing_order in orders.values():
+
+        if existing_order.get("vehicle_instance_id", "") == vehicle_instance_id \
+        and existing_order.get("defect_id", "") == defect_id \
+        and existing_order.get("status", "") == "pending":
+
+            return {
+                "success": false,
+                "message": "Ja existe uma ordem pendente para esse defeito."
+            }
 
     var order_id := "order_" + str(Time.get_ticks_usec())
 
-    var service_name := "Diagnostico pendente"
-    var labor_price := 0.0
+    var service_name := "Servico de reparo"
+    var labor_price := 100.0
 
     for service in data_manager.get_all_services():
-        if defect_id in service.get("related_defects", []):
-            service_name = service.get("name", service_name)
-            labor_price = float(service.get("labor_price", 0.0))
+
+        var related: Array = service.get("related_defects", [])
+
+        if related.has(defect_id):
+            service_name = str(service.get("name", service_name))
+            labor_price = float(service.get("labor_price", labor_price))
             break
 
     var order: Dictionary = {
@@ -73,6 +101,7 @@ func create_order(
         "vehicle_instance_id": vehicle_instance_id,
         "vehicle_name": vehicle.get("name", "Veiculo"),
         "defect_id": defect_id,
+        "defect_name": defect.get("name", "Defeito"),
         "service_name": service_name,
         "labor_price": labor_price,
         "status": "pending",
@@ -85,7 +114,8 @@ func create_order(
 
     return {
         "success": true,
-        "order": order.duplicate(true)
+        "order": order.duplicate(true),
+        "message": "Ordem criada com sucesso."
     }
 
 
@@ -96,23 +126,29 @@ func complete_order(order_id: String) -> Dictionary:
 
     var order: Dictionary = orders[order_id]
 
-    if order["status"] != "pending":
+    if order.get("status", "") != "pending":
         return {"success": false, "message": "Ordem nao esta pendente."}
 
+    if repair_manager == null or customer_manager == null:
+        return {"success": false, "message": "Sistemas nao inicializados."}
+
     var result := repair_manager.repair_defect(
-        order["vehicle_instance_id"],
-        order["defect_id"]
+        str(order["vehicle_instance_id"]),
+        str(order["defect_id"])
     )
 
     if not result.get("success", false):
         return result
 
+    var payment := float(result.get("payment", 0.0))
+
     customer_manager.register_service(
-        order["customer_id"],
-        float(result.get("payment", 0.0))
+        str(order["customer_id"]),
+        payment
     )
 
     order["status"] = "completed"
+    order["payment"] = payment
     order["completed_at"] = Time.get_unix_time_from_system()
 
     orders[order_id] = order
@@ -122,7 +158,7 @@ func complete_order(order_id: String) -> Dictionary:
     return {
         "success": true,
         "message": "Servico concluido com sucesso!",
-        "payment": result.get("payment", 0.0)
+        "payment": payment
     }
 
 
@@ -131,7 +167,7 @@ func cancel_order(order_id: String) -> bool:
     if not orders.has(order_id):
         return false
 
-    if orders[order_id]["status"] != "pending":
+    if orders[order_id].get("status", "") != "pending":
         return false
 
     orders[order_id]["status"] = "cancelled"
@@ -156,7 +192,8 @@ func get_pending_orders() -> Array:
     var pending: Array = []
 
     for order in orders.values():
-        if order["status"] == "pending":
-            pending.append(order)
+
+        if order.get("status", "") == "pending":
+            pending.append(order.duplicate(true))
 
     return pending
