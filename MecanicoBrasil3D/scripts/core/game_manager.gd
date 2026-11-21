@@ -1,5 +1,6 @@
 
 extends Node3D
+class_name GameManager
 
 # MECANICO BRASIL 3D
 # Gerenciador principal do jogo
@@ -14,6 +15,7 @@ var player_data: Dictionary = {
     "experience": 0,
     "reputation": 0
 }
+
 
 func _ready() -> void:
     initialize_game()
@@ -31,14 +33,15 @@ func initialize_game() -> void:
 
 
 func get_player_money() -> float:
-    return player_data["money"]
+    return float(player_data.get("money", 0.0))
 
 
 func add_money(amount: float) -> void:
     if amount <= 0:
         return
 
-    player_data["money"] += amount
+    player_data["money"] = get_player_money() + amount
+
     print("Dinheiro recebido: R$ ", amount)
 
 
@@ -46,10 +49,27 @@ func remove_money(amount: float) -> bool:
     if amount <= 0:
         return false
 
-    if player_data["money"] < amount:
+    if get_player_money() < amount:
         return false
 
-    player_data["money"] -= amount
+    player_data["money"] = get_player_money() - amount
+
     print("Dinheiro gasto: R$ ", amount)
 
     return true
+
+
+func set_player_data(data: Dictionary) -> void:
+    player_data = data.duplicate(true)
+
+
+func get_player_data() -> Dictionary:
+    return player_data.duplicate(true)
+
+
+func add_reputation(amount: int) -> void:
+    player_data["reputation"] = clampi(
+        int(player_data.get("reputation", 0)) + amount,
+        0,
+        1000
+    )
