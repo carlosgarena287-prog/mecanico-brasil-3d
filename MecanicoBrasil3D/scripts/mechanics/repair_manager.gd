@@ -2,29 +2,25 @@
 extends Node
 class_name RepairManager
 
-# MECANICO BRASIL 3D
-# Sistema central de reparos
-
 var data_manager: DataManager
 var vehicle_manager: VehicleManager
-var defect_manager: DefectManager
 var inventory_manager: InventoryManager
-var game_manager: Node
+var defect_manager: DefectManager
+var game_manager: GameManager
 
 
 func initialize(
     data: DataManager,
     vehicles: VehicleManager,
-    defects: DefectManager,
     inventory: InventoryManager,
-    economy: Node
+    defects: DefectManager,
+    game: GameManager
 ) -> void:
-
     data_manager = data
     vehicle_manager = vehicles
-    defect_manager = defects
     inventory_manager = inventory
-    game_manager = economy
+    defect_manager = defects
+    game_manager = game
 
     print("Sistema de reparos iniciado.")
 
@@ -32,80 +28,90 @@ func initialize(
 func repair_defect(
     instance_id: String,
     defect_id: String
-) -> Dictionary:
+) -> bool:
 
     if data_manager == null:
-        return {"success": false, "message": "Sistema nao inicializado."}
+        push_error("DataManager nao inicializado.")
+        return false
+
+    if vehicle_manager == null or inventory_manager == null:
+        push_error("Gerenciadores de veiculo ou inventario ausentes.")
+        return false
+
+    if defect_manager == null or game_manager == null:
+        push_error("Gerenciadores de defeito ou jogo ausentes.")
+        return false
 
     var vehicle := vehicle_manager.get_vehicle_instance(instance_id)
 
     if vehicle.is_empty():
-        return {"success": false, "message": "Veiculo nao encontrado."}
+        return false
 
-    var defect := data_manager.get_defect(defect_id)
+    var defect := defect_manager.diagnose_defect(
+        instance_id,
+        defect_id
+    )
 
     if defect.is_empty():
-        return {"success": false, "message": "Defeito nao encontrado."}
+        print("Defeito nao diagnosticado ou inexistente.")
+        return false
 
-    var current_defects := defect_manager.get_vehicle_defects(instance_id)
+    var part_id := str(defect.get("affected_part", ""))
 
-    if not defect_id in current_defects:
-        return {"success": false, "message": "Esse veiculo nao possui esse defeito."}
+    if part_id.is_empty():
+        return false
 
-    # Encontrar o servico correspondente
-    var selected_service: Dictionary = {}
+    var part := data_manager.get_part(part_id)
 
-    for service in data_manager.get_all_services():
-        var related_defects: Array = service.get("related_defects", [])
+    if part.is_empty():
+        return false
 
-        if defect_id in related_defects:
-            selected_service = service
-            break
+    var required_parts: Array = defect.get(
+        "required_parts",
+        [part_id]
+    )
 
-    if selected_service.is_empty():
-        return {"success": false, "message": "Servico de reparo nao cadastrado."}
+    # Verifica todas as pecas antes de consumir qualquer uma.
+    for required_part_id in required_parts:
 
-    var required_parts: Array = selected_service.get("required_parts", [])
+        if not inventory_manager.has_part(required_part_id):
+            print("Peca em falta: ", required_part_id)
+            return false
 
-    # Verificar todas as pecas antes de consumir o estoque
-    for part_id in required_parts:
-        if not inventory_manager.has_part(part_id, 1):
-            return {
-                "success": false,
-                "message": "Estoque insuficiente: " + str(part_id)
-            }
+    # Consome as pecas necessarias.
+    for required_part_id in required_parts:
 
-    # Consumir as pecas necessarias
-    for part_id in required_parts:
-        inventory_manager.consume_part(part_id, 1)
+        var consumed := inventory_manager.remove_part(
+            required_part_id,
+            1
+        )
 
-    # Restaurar a condicao da peca afetada
-    var affected_part: String = defect.get("affected_part", "")
+        if not consumed:
+            push_error("Falha ao consumir uma peca.")
+            return false
 
+    # Recupera a condicao da peca afetada.
     vehicle_manager.set_part_condition(
         instance_id,
-        affected_part,
+        part_id,
         100.0
     )
 
-    # Remover o defeito do veiculo
-    defect_manager.remove_defect(instance_id, defect_id)
-
-    # Receber pagamento da mao de obra
-    var labor_payment := float(
-        selected_service.get("labor_price", 0.0)
+    # Remove o defeito do veiculo.
+    defect_manager.remove_defect(
+        instance_id,
+        defect_id
     )
 
-    game_manager.add_money(labor_payment)
+    # Recebe o pagamento da mao de obra.
+    var labor_cost := float(defect.get("repair_cost", 100.0))
 
-    print("Reparo concluido: ", selected_service.get("name", ""))
+    game_manager.add_money(labor_cost)
 
-    return {
-        "success": true,
-        "message": "Reparo concluido!",
-        "service": selected_service.get("name", ""),
-        "payment": labor_payment
-    }
+    print("Reparo concluido: ", defect.get("name", defect_id))
+    print("Pagamento recebido: R$ ", labor_cost)
+
+    return true
 
 
 func can_repair(
@@ -113,25 +119,25 @@ func can_repair(
     defect_id: String
 ) -> bool:
 
-    var vehicle := vehicle_manager.get_vehicle_instance(instance_id)
-
-    if vehicle.is_empty():
+    if defect_manager == null or inventory_manager == null:
         return false
 
-    if not defect_id in defect_manager.get_vehicle_defects(instance_id):
-        return false
-
-    var defect := data_manager.get_defect(defect_id)
+    var defect := defect_manager.diagnose_defect(
+        instance_id,
+        defect_id
+    )
 
     if defect.is_empty():
         return false
 
-    for service in data_manager.get_all_services():
-        if defect_id in service.get("related_defects", []):
-            for part_id in service.get("required_parts", []):
-                if not inventory_manager.has_part(part_id, 1):
-                    return false
+    var required_parts: Array = defect.get(
+        "required_parts",
+        [defect.get("affected_part", "")]
+    )
 
-            return true
+    for part_id in required_parts:
 
-    return false
+        if not inventory_manager.has_part(str(part_id)):
+            return false
+
+    return true
