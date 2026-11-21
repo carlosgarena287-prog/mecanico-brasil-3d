@@ -1,199 +1,86 @@
 
-extends Node
-class_name ServiceOrderManager
+extends Node3D
 
-# MECANICO BRASIL 3D
-# Sistema de ordens de servico
-
-var data_manager: DataManager
-var customer_manager: CustomerManager
-var vehicle_manager: VehicleManager
-var defect_manager: DefectManager
-var repair_manager: RepairManager
-
-var orders: Dictionary = {}
-
-
-func initialize(
-    data: DataManager,
-    customers: CustomerManager,
-    vehicles: VehicleManager,
-    defects: DefectManager,
-    repairs: RepairManager
-) -> void:
-
-    data_manager = data
-    customer_manager = customers
-    vehicle_manager = vehicles
-    defect_manager = defects
-    repair_manager = repairs
-
-    print("Sistema de ordens de servico iniciado.")
+var game_manager
+var data_manager
+var vehicle_manager
+var defect_manager
+var inventory_manager
+var repair_manager
+var customer_manager
+var service_order_manager
+var save_manager
+var progression_manager
 
 
-func create_order(
-    customer_id: String,
-    vehicle_instance_id: String,
-    defect_id: String
-) -> Dictionary:
+func _ready() -> void:
+    start_game()
 
-    if data_manager == null:
-        return {"success": false, "message": "Catalogos nao carregados."}
 
-    if customer_manager == null or vehicle_manager == null:
-        return {"success": false, "message": "Sistema de clientes ou veiculos ausente."}
+func start_game() -> void:
+    print("Iniciando Mecanico Brasil 3D...")
 
-    if defect_manager == null or repair_manager == null:
-        return {"success": false, "message": "Sistema de reparos ausente."}
+    # Sistema principal
+    game_manager = GameManager.new()
+    add_child(game_manager)
 
-    var customer := customer_manager.get_customer(customer_id)
-    var vehicle := vehicle_manager.get_vehicle_instance(vehicle_instance_id)
-    var defect := data_manager.get_defect(defect_id)
+    # Catalogos
+    data_manager = DataManager.new()
+    add_child(data_manager)
 
-    if customer.is_empty():
-        return {"success": false, "message": "Cliente nao encontrado."}
+    if data_manager.catalogs.size() != 4:
+        push_error("Erro ao carregar os catalogos.")
+        return
 
-    if vehicle.is_empty():
-        return {"success": false, "message": "Veiculo nao encontrado."}
+    # Progressao
+    progression_manager = ProgressionManager.new()
+    add_child(progression_manager)
+    progression_manager.initialize(game_manager)
 
-    if defect.is_empty():
-        return {"success": false, "message": "Defeito nao encontrado."}
+    # Veiculos
+    vehicle_manager = VehicleManager.new()
+    add_child(vehicle_manager)
+    vehicle_manager.initialize(data_manager)
 
-    var vehicle_defects := defect_manager.get_vehicle_defects(
-        vehicle_instance_id
+    # Defeitos
+    defect_manager = DefectManager.new()
+    add_child(defect_manager)
+    defect_manager.initialize(data_manager, vehicle_manager)
+
+    # Estoque
+    inventory_manager = InventoryManager.new()
+    add_child(inventory_manager)
+    inventory_manager.initialize(data_manager, game_manager)
+
+    # Reparos
+    repair_manager = RepairManager.new()
+    add_child(repair_manager)
+    repair_manager.initialize(
+        data_manager,
+        vehicle_manager,
+        defect_manager,
+        inventory_manager,
+        game_manager
     )
 
-    if not vehicle_defects.has(defect_id):
-        return {
-            "success": false,
-            "message": "Esse defeito nao pertence ao veiculo."
-        }
+    # Clientes
+    customer_manager = CustomerManager.new()
+    add_child(customer_manager)
 
-    # Impede duas ordens abertas para o mesmo defeito.
-    for existing_order in orders.values():
-
-        if existing_order.get("vehicle_instance_id", "") == vehicle_instance_id \
-        and existing_order.get("defect_id", "") == defect_id \
-        and existing_order.get("status", "") == "pending":
-
-            return {
-                "success": false,
-                "message": "Ja existe uma ordem pendente para esse defeito."
-            }
-
-    var order_id := "order_" + str(Time.get_ticks_usec())
-
-    var service_name := "Servico de reparo"
-    var labor_price := 100.0
-
-    for service in data_manager.get_all_services():
-
-        var related: Array = service.get("related_defects", [])
-
-        if related.has(defect_id):
-            service_name = str(service.get("name", service_name))
-            labor_price = float(service.get("labor_price", labor_price))
-            break
-
-    var order: Dictionary = {
-        "id": order_id,
-        "customer_id": customer_id,
-        "vehicle_instance_id": vehicle_instance_id,
-        "vehicle_name": vehicle.get("name", "Veiculo"),
-        "defect_id": defect_id,
-        "defect_name": defect.get("name", "Defeito"),
-        "service_name": service_name,
-        "labor_price": labor_price,
-        "status": "pending",
-        "created_at": Time.get_unix_time_from_system()
-    }
-
-    orders[order_id] = order
-
-    print("Ordem de servico criada: ", order_id)
-
-    return {
-        "success": true,
-        "order": order.duplicate(true),
-        "message": "Ordem criada com sucesso."
-    }
-
-
-func complete_order(order_id: String) -> Dictionary:
-
-    if not orders.has(order_id):
-        return {"success": false, "message": "Ordem nao encontrada."}
-
-    var order: Dictionary = orders[order_id]
-
-    if order.get("status", "") != "pending":
-        return {"success": false, "message": "Ordem nao esta pendente."}
-
-    if repair_manager == null or customer_manager == null:
-        return {"success": false, "message": "Sistemas nao inicializados."}
-
-    var result := repair_manager.repair_defect(
-        str(order["vehicle_instance_id"]),
-        str(order["defect_id"])
+    # Ordens de servico
+    service_order_manager = ServiceOrderManager.new()
+    add_child(service_order_manager)
+    service_order_manager.initialize(
+        data_manager,
+        customer_manager,
+        vehicle_manager,
+        defect_manager,
+        repair_manager
     )
 
-    if not result.get("success", false):
-        return result
+    # Salvamento
+    save_manager = SaveManager.new()
+    add_child(save_manager)
 
-    var payment := float(result.get("payment", 0.0))
-
-    customer_manager.register_service(
-        str(order["customer_id"]),
-        payment
-    )
-
-    order["status"] = "completed"
-    order["payment"] = payment
-    order["completed_at"] = Time.get_unix_time_from_system()
-
-    orders[order_id] = order
-
-    print("Ordem concluida: ", order_id)
-
-    return {
-        "success": true,
-        "message": "Servico concluido com sucesso!",
-        "payment": payment
-    }
-
-
-func cancel_order(order_id: String) -> bool:
-
-    if not orders.has(order_id):
-        return false
-
-    if orders[order_id].get("status", "") != "pending":
-        return false
-
-    orders[order_id]["status"] = "cancelled"
-
-    return true
-
-
-func get_order(order_id: String) -> Dictionary:
-
-    if not orders.has(order_id):
-        return {}
-
-    return orders[order_id].duplicate(true)
-
-
-func get_all_orders() -> Array:
-    return orders.values()
-
-
-func get_pending_orders() -> Array:
-
-    var pending: Array = []
-
-    for order in orders.values():
-
-        if order.get("status", "") == "pending":
-            pending.append(order.duplicate(true))
-
-    return pending
+    print("Todos os sistemas foram conectados!")
+    print("Mecanico Brasil 3D pronto para iniciar.")
