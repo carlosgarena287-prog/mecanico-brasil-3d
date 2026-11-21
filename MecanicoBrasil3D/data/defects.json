@@ -1,0 +1,84 @@
+
+{
+  "catalog_version": 1,
+  "defects": [
+    {
+      "id": "low_engine_oil",
+      "name": "Nivel de oleo baixo",
+      "description": "O motor esta com pouco oleo.",
+      "affected_part": "engine_oil",
+      "category": "lubrication",
+      "symptoms": [
+        "oil_warning_light",
+        "engine_noise"
+      ],
+      "diagnosis_difficulty": 1,
+      "repair_type": "replace"
+    },
+    {
+      "id": "clogged_air_filter",
+      "name": "Filtro de ar obstruido",
+      "description": "O filtro de ar esta sujo e restringe a entrada de ar.",
+      "affected_part": "air_filter",
+      "category": "intake",
+      "symptoms": [
+        "weak_acceleration",
+        "high_fuel_consumption"
+      ],
+      "diagnosis_difficulty": 1,
+      "repair_type": "replace"
+    },
+    {
+      "id": "weak_battery",
+      "name": "Bateria fraca",
+      "description": "A bateria nao fornece energia suficiente.",
+      "affected_part": "battery",
+      "category": "electrical",
+      "symptoms": [
+        "slow_start",
+        "electrical_failure"
+      ],
+      "diagnosis_difficulty": 1,
+      "repair_type": "replace"
+    },
+    {
+      "id": "alternator_failure",
+      "name": "Falha no alternador",
+      "description": "O alternador nao esta carregando corretamente.",
+      "affected_part": "alternator",
+      "category": "electrical",
+      "symptoms": [
+        "battery_warning_light",
+        "electrical_failure"
+      ],
+      "diagnosis_difficulty": 3,
+      "repair_type": "replace"
+    },
+    {
+      "id": "worn_brake_pads",
+      "name": "Pastilhas de freio desgastadas",
+      "description": "As pastilhas estao com desgaste elevado.",
+      "affected_part": "brake_pads_front",
+      "category": "brakes",
+      "symptoms": [
+        "brake_noise",
+        "reduced_braking"
+      ],
+      "diagnosis_difficulty": 2,
+      "repair_type": "replace"
+    },
+    {
+      "id": "worn_spark_plugs",
+      "name": "Velas desgastadas",
+      "description": "As velas apresentam desgaste e prejudicam a ignicao.",
+      "affected_part": "spark_plugs",
+      "category": "ignition",
+      "symptoms": [
+        "engine_misfire",
+        "difficult_start"
+      ],
+      "diagnosis_difficulty": 2,
+      "repair_type": "replace"
+    }
+  ]
+}
