@@ -1,0 +1,91 @@
+
+{
+  "catalog_version": 1,
+  "services": [
+    {
+      "id": "oil_change",
+      "name": "Troca de oleo",
+      "description": "Trocar o oleo e o filtro do motor.",
+      "required_parts": [
+        "engine_oil",
+        "oil_filter"
+      ],
+      "related_defects": [
+        "low_engine_oil"
+      ],
+      "labor_price": 60.0,
+      "estimated_minutes": 20,
+      "difficulty": 1
+    },
+    {
+      "id": "air_filter_replacement",
+      "name": "Troca do filtro de ar",
+      "description": "Remover o filtro antigo e instalar um novo.",
+      "required_parts": [
+        "air_filter"
+      ],
+      "related_defects": [
+        "clogged_air_filter"
+      ],
+      "labor_price": 25.0,
+      "estimated_minutes": 10,
+      "difficulty": 1
+    },
+    {
+      "id": "battery_replacement",
+      "name": "Troca de bateria",
+      "description": "Substituir a bateria do veiculo.",
+      "required_parts": [
+        "battery"
+      ],
+      "related_defects": [
+        "weak_battery"
+      ],
+      "labor_price": 60.0,
+      "estimated_minutes": 15,
+      "difficulty": 1
+    },
+    {
+      "id": "alternator_replacement",
+      "name": "Troca do alternador",
+      "description": "Substituir o alternador defeituoso.",
+      "required_parts": [
+        "alternator"
+      ],
+      "related_defects": [
+        "alternator_failure"
+      ],
+      "labor_price": 150.0,
+      "estimated_minutes": 45,
+      "difficulty": 3
+    },
+    {
+      "id": "front_brake_service",
+      "name": "Troca das pastilhas dianteiras",
+      "description": "Substituir as pastilhas de freio dianteiras.",
+      "required_parts": [
+        "brake_pads_front"
+      ],
+      "related_defects": [
+        "worn_brake_pads"
+      ],
+      "labor_price": 100.0,
+      "estimated_minutes": 30,
+      "difficulty": 2
+    },
+    {
+      "id": "spark_plug_replacement",
+      "name": "Troca das velas",
+      "description": "Substituir as velas de ignicao.",
+      "required_parts": [
+        "spark_plugs"
+      ],
+      "related_defects": [
+        "worn_spark_plugs"
+      ],
+      "labor_price": 70.0,
+      "estimated_minutes": 25,
+      "difficulty": 2
+    }
+  ]
+}
