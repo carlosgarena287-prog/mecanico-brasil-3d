@@ -1,0 +1,29 @@
+
+{
+  "catalog_version": 1,
+  "vehicles": [
+    {
+      "id": "chevrolet_celta_2013",
+      "name": "Chevrolet Celta",
+      "model_year": 2013,
+      "category": "hatchback",
+      "engine": {
+        "name": "1.0 VHC-E Flex",
+        "fuel": "flex",
+        "cylinders": 4,
+        "configuration": "inline"
+      },
+      "transmission": {
+        "type": "manual",
+        "gears": 5
+      },
+      "drivetrain": "front_wheel_drive",
+      "gameplay": {
+        "purchase_value": 18000,
+        "base_condition": 100,
+        "difficulty": 1
+      },
+      "available": true
+    }
+  ]
+}
