@@ -9,7 +9,10 @@
       "purchase_price": 45.0,
       "labor_price": 30.0,
       "compatible_vehicles": [
-        "chevrolet_celta_2013"
+        "chevrolet_celta_2013",
+        "fiat_uno_2012",
+        "volkswagen_gol_2012",
+        "volkswagen_jetta_2013"
       ],
       "condition_max": 100,
       "replaceable": true
@@ -21,7 +24,10 @@
       "purchase_price": 25.0,
       "labor_price": 20.0,
       "compatible_vehicles": [
-        "chevrolet_celta_2013"
+        "chevrolet_celta_2013",
+        "fiat_uno_2012",
+        "volkswagen_gol_2012",
+        "volkswagen_jetta_2013"
       ],
       "condition_max": 100,
       "replaceable": true
@@ -33,7 +39,10 @@
       "purchase_price": 35.0,
       "labor_price": 25.0,
       "compatible_vehicles": [
-        "chevrolet_celta_2013"
+        "chevrolet_celta_2013",
+        "fiat_uno_2012",
+        "volkswagen_gol_2012",
+        "volkswagen_jetta_2013"
       ],
       "condition_max": 100,
       "replaceable": true
@@ -45,7 +54,10 @@
       "purchase_price": 350.0,
       "labor_price": 60.0,
       "compatible_vehicles": [
-        "chevrolet_celta_2013"
+        "chevrolet_celta_2013",
+        "fiat_uno_2012",
+        "volkswagen_gol_2012",
+        "volkswagen_jetta_2013"
       ],
       "condition_max": 100,
       "replaceable": true
@@ -57,7 +69,10 @@
       "purchase_price": 480.0,
       "labor_price": 150.0,
       "compatible_vehicles": [
-        "chevrolet_celta_2013"
+        "chevrolet_celta_2013",
+        "fiat_uno_2012",
+        "volkswagen_gol_2012",
+        "volkswagen_jetta_2013"
       ],
       "condition_max": 100,
       "replaceable": true
@@ -69,7 +84,10 @@
       "purchase_price": 90.0,
       "labor_price": 100.0,
       "compatible_vehicles": [
-        "chevrolet_celta_2013"
+        "chevrolet_celta_2013",
+        "fiat_uno_2012",
+        "volkswagen_gol_2012",
+        "volkswagen_jetta_2013"
       ],
       "condition_max": 100,
       "replaceable": true
@@ -81,7 +99,10 @@
       "purchase_price": 80.0,
       "labor_price": 70.0,
       "compatible_vehicles": [
-        "chevrolet_celta_2013"
+        "chevrolet_celta_2013",
+        "fiat_uno_2012",
+        "volkswagen_gol_2012",
+        "volkswagen_jetta_2013"
       ],
       "condition_max": 100,
       "replaceable": true
