@@ -24,6 +24,75 @@
         "difficulty": 1
       },
       "available": true
+    },
+    {
+      "id": "fiat_uno_2012",
+      "name": "Fiat Uno",
+      "model_year": 2012,
+      "category": "hatchback",
+      "engine": {
+        "name": "1.0 Fire Flex",
+        "fuel": "flex",
+        "cylinders": 4,
+        "configuration": "inline"
+      },
+      "transmission": {
+        "type": "manual",
+        "gears": 5
+      },
+      "drivetrain": "front_wheel_drive",
+      "gameplay": {
+        "purchase_value": 16000,
+        "base_condition": 100,
+        "difficulty": 1
+      },
+      "available": true
+    },
+    {
+      "id": "volkswagen_gol_2012",
+      "name": "Volkswagen Gol G5",
+      "model_year": 2012,
+      "category": "hatchback",
+      "engine": {
+        "name": "1.0 VHT Flex",
+        "fuel": "flex",
+        "cylinders": 4,
+        "configuration": "inline"
+      },
+      "transmission": {
+        "type": "manual",
+        "gears": 5
+      },
+      "drivetrain": "front_wheel_drive",
+      "gameplay": {
+        "purchase_value": 22000,
+        "base_condition": 100,
+        "difficulty": 2
+      },
+      "available": true
+    },
+    {
+      "id": "volkswagen_jetta_2013",
+      "name": "Volkswagen Jetta",
+      "model_year": 2013,
+      "category": "sedan",
+      "engine": {
+        "name": "2.0 Flex",
+        "fuel": "flex",
+        "cylinders": 4,
+        "configuration": "inline"
+      },
+      "transmission": {
+        "type": "manual",
+        "gears": 5
+      },
+      "drivetrain": "front_wheel_drive",
+      "gameplay": {
+        "purchase_value": 42000,
+        "base_condition": 100,
+        "difficulty": 3
+      },
+      "available": true
     }
   ]
 }
