@@ -1,86 +1,109 @@
 
-extends Node3D
+extends Node
+class_name ServiceOrderManager
 
-var game_manager
-var data_manager
-var vehicle_manager
-var defect_manager
-var inventory_manager
-var repair_manager
-var customer_manager
-var service_order_manager
-var save_manager
-var progression_manager
+var data_manager: DataManager
+var customer_manager: CustomerManager
+var vehicle_manager: VehicleManager
+var defect_manager: DefectManager
+var repair_manager: RepairManager
+
+var service_orders: Dictionary = {}
 
 
-func _ready() -> void:
-    start_game()
+func initialize(
+    data: DataManager,
+    customers: CustomerManager,
+    vehicles: VehicleManager,
+    defects: DefectManager,
+    repairs: RepairManager
+) -> void:
+    data_manager = data
+    customer_manager = customers
+    vehicle_manager = vehicles
+    defect_manager = defects
+    repair_manager = repairs
+
+    print("Sistema de ordens de servico iniciado.")
 
 
-func start_game() -> void:
-    print("Iniciando Mecanico Brasil 3D...")
+func create_order(vehicle_id: String, defect_id: String) -> Dictionary:
+    if data_manager == null or customer_manager == null:
+        return {"success": false, "message": "Sistema nao inicializado."}
 
-    # Sistema principal
-    game_manager = GameManager.new()
-    add_child(game_manager)
+    var vehicle := vehicle_manager.create_vehicle(vehicle_id)
 
-    # Catalogos
-    data_manager = DataManager.new()
-    add_child(data_manager)
+    if vehicle.is_empty():
+        return {"success": false, "message": "Veiculo nao encontrado."}
 
-    if data_manager.catalogs.size() != 4:
-        push_error("Erro ao carregar os catalogos.")
-        return
+    var instance_id := str(vehicle["instance_id"])
 
-    # Progressao
-    progression_manager = ProgressionManager.new()
-    add_child(progression_manager)
-    progression_manager.initialize(game_manager)
+    if not defect_manager.apply_defect(instance_id, defect_id):
+        vehicle_manager.remove_vehicle(instance_id)
+        return {"success": false, "message": "Nao foi possivel aplicar o defeito."}
 
-    # Veiculos
-    vehicle_manager = VehicleManager.new()
-    add_child(vehicle_manager)
-    vehicle_manager.initialize(data_manager)
+    var customer := customer_manager.create_customer()
+    var order_id := "order_" + str(Time.get_ticks_usec())
 
-    # Defeitos
-    defect_manager = DefectManager.new()
-    add_child(defect_manager)
-    defect_manager.initialize(data_manager, vehicle_manager)
+    var order := {
+        "id": order_id,
+        "customer_id": customer["id"],
+        "vehicle_instance_id": instance_id,
+        "vehicle_id": vehicle_id,
+        "defect_id": defect_id,
+        "status": "waiting",
+        "payment": 0.0
+    }
 
-    # Estoque
-    inventory_manager = InventoryManager.new()
-    add_child(inventory_manager)
-    inventory_manager.initialize(data_manager, game_manager)
+    service_orders[order_id] = order
 
-    # Reparos
-    repair_manager = RepairManager.new()
-    add_child(repair_manager)
-    repair_manager.initialize(
-        data_manager,
-        vehicle_manager,
-        defect_manager,
-        inventory_manager,
-        game_manager
+    print("Nova ordem de servico: ", order_id)
+
+    return {
+        "success": true,
+        "order": order.duplicate(true)
+    }
+
+
+func get_order(order_id: String) -> Dictionary:
+    if not service_orders.has(order_id):
+        return {}
+
+    return service_orders[order_id].duplicate(true)
+
+
+func get_all_orders() -> Array:
+    return service_orders.values()
+
+
+func complete_order(order_id: String) -> Dictionary:
+    if not service_orders.has(order_id):
+        return {"success": false, "message": "Ordem nao encontrada."}
+
+    var order: Dictionary = service_orders[order_id]
+
+    if order["status"] == "completed":
+        return {"success": false, "message": "Ordem ja concluida."}
+
+    var result := repair_manager.repair_defect(
+        str(order["vehicle_instance_id"]),
+        str(order["defect_id"])
     )
 
-    # Clientes
-    customer_manager = CustomerManager.new()
-    add_child(customer_manager)
+    if not result.get("success", false):
+        return result
 
-    # Ordens de servico
-    service_order_manager = ServiceOrderManager.new()
-    add_child(service_order_manager)
-    service_order_manager.initialize(
-        data_manager,
-        customer_manager,
-        vehicle_manager,
-        defect_manager,
-        repair_manager
+    order["status"] = "completed"
+    order["payment"] = float(result.get("payment", 0.0))
+    service_orders[order_id] = order
+
+    customer_manager.register_service(
+        str(order["customer_id"]),
+        float(order["payment"])
     )
 
-    # Salvamento
-    save_manager = SaveManager.new()
-    add_child(save_manager)
-
-    print("Todos os sistemas foram conectados!")
-    print("Mecanico Brasil 3D pronto para iniciar.")
+    return {
+        "success": true,
+        "message": "Servico concluido!",
+        "payment": order["payment"]
+    }
