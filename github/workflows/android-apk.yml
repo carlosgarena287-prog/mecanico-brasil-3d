@@ -1,0 +1,63 @@
+
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "MecanicoBrasil3D/**"
+      - ".github/workflows/android-apk.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+      - name: Install Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install SDK components
+        run: |
+          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Install Godot 4.7.2
+        run: |
+          wget -q https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip -O godot.zip
+          unzip -q godot.zip -d godot
+          chmod +x godot/Godot_v4.7.2-stable_linux.x86_64
+
+      - name: Install export templates
+        run: |
+          mkdir -p "$HOME/.local/share/godot/export_templates/4.7.2.stable"
+          wget -q https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz -O templates.tpz
+          unzip -q templates.tpz -d templates
+          cp templates/templates/* "$HOME/.local/share/godot/export_templates/4.7.2.stable/"
+
+      - name: Import and validate project
+        working-directory: MecanicoBrasil3D
+        run: |
+          ../godot/Godot_v4.7.2-stable_linux.x86_64 --headless --editor --path . --quit
+
+      - name: Export APK
+        working-directory: MecanicoBrasil3D
+        run: |
+          mkdir -p build
+          ../godot/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --export-debug "Android" build/MecanicoBrasil3D.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: MecanicoBrasil3D-Android-APK
+          path: MecanicoBrasil3D/build/MecanicoBrasil3D.apk
+          if-no-files-found: error
