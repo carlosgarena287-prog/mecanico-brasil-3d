@@ -1,6 +1,8 @@
 
 extends Node3D
 
+const WorkshopBuilderScript = preload("res://scripts/world/workshop_builder.gd")
+
 var game_manager
 var data_manager
 var vehicle_manager
@@ -11,6 +13,7 @@ var customer_manager
 var service_order_manager
 var save_manager
 var progression_manager
+var workshop_builder
 
 
 func _ready() -> void:
@@ -81,6 +84,11 @@ func start_game() -> void:
     # Salvamento
     save_manager = SaveManager.new()
     add_child(save_manager)
+
+    # Construcao da oficina 3D
+    workshop_builder = WorkshopBuilderScript.new()
+    add_child(workshop_builder)
+    workshop_builder.build_workshop(self)
 
     print("Todos os sistemas foram conectados!")
     print("Mecanico Brasil 3D pronto para iniciar.")
