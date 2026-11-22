@@ -3,6 +3,7 @@ extends Node3D
 
 const WorkshopBuilderScript = preload("res://scripts/world/workshop_builder.gd")
 const VehicleModelBuilderScript = preload("res://scripts/vehicles/vehicle_model_builder.gd")
+const WorkshopUIScript = preload("res://scripts/ui/workshop_ui.gd")
 
 var game_manager
 var data_manager
@@ -16,6 +17,7 @@ var save_manager
 var progression_manager
 var workshop_builder
 var vehicle_model_builder
+var workshop_ui
 
 
 func _ready() -> void:
@@ -77,19 +79,29 @@ func start_game() -> void:
     save_manager = SaveManager.new()
     add_child(save_manager)
 
-    # Constroi a oficina
     workshop_builder = WorkshopBuilderScript.new()
     add_child(workshop_builder)
     workshop_builder.build_workshop(self)
 
-    # Constroi os modelos dos carros
     vehicle_model_builder = VehicleModelBuilderScript.new()
     add_child(vehicle_model_builder)
 
     _create_initial_vehicles()
 
-    print("Todos os sistemas foram conectados!")
-    print("Mecanico Brasil 3D pronto para iniciar.")
+    workshop_ui = WorkshopUIScript.new()
+    add_child(workshop_ui)
+    workshop_ui.initialize(
+        data_manager,
+        game_manager,
+        progression_manager,
+        vehicle_manager,
+        defect_manager,
+        inventory_manager,
+        repair_manager,
+        service_order_manager
+    )
+
+    print("Mecanico Brasil 3D pronto!")
 
 
 func _create_initial_vehicles() -> void:
@@ -114,7 +126,6 @@ func _create_initial_vehicles() -> void:
 
     for vehicle_data in vehicles_to_spawn:
         var vehicle_id: String = vehicle_data["id"]
-
         var vehicle_instance := vehicle_manager.create_vehicle(vehicle_id)
 
         if vehicle_instance.is_empty():
@@ -127,4 +138,4 @@ func _create_initial_vehicles() -> void:
             vehicle_data["position"]
         )
 
-    print("Quatro veiculos foram adicionados a oficina.")
+    print("Quatro veiculos adicionados a oficina.")
