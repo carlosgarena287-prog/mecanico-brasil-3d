@@ -126,7 +126,7 @@ func _create_initial_vehicles() -> void:
 
     for vehicle_data in vehicles_to_spawn:
         var vehicle_id: String = vehicle_data["id"]
-        var vehicle_instance := vehicle_manager.create_vehicle(vehicle_id)
+        var vehicle_instance: Dictionary = vehicle_manager.create_vehicle(vehicle_id)
 
         if vehicle_instance.is_empty():
             push_error("Nao foi possivel criar: " + vehicle_id)
