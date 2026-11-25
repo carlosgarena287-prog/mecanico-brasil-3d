@@ -18,21 +18,26 @@ func save_game(
     order_manager: ServiceOrderManager
 ) -> bool:
 
+    if (
+        game_manager == null
+        or vehicle_manager == null
+        or defect_manager == null
+        or inventory_manager == null
+        or customer_manager == null
+        or order_manager == null
+    ):
+        push_error("Nao foi possivel salvar: sistema nao inicializado.")
+        return false
+
     var save_data: Dictionary = {
         "save_version": SAVE_VERSION,
         "saved_at": Time.get_unix_time_from_system(),
-
         "player": game_manager.player_data.duplicate(true),
-
         "vehicles": vehicle_manager.active_vehicles.duplicate(true),
-
         "defects": defect_manager.vehicle_defects.duplicate(true),
-
         "inventory": inventory_manager.inventory.duplicate(true),
-
         "customers": customer_manager.customers.duplicate(true),
-
-        "orders": order_manager.orders.duplicate(true)
+        "orders": order_manager.service_orders.duplicate(true)
     }
 
     var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
@@ -45,7 +50,6 @@ func save_game(
     file.close()
 
     print("Jogo salvo com sucesso!")
-
     return true
 
 
@@ -57,6 +61,17 @@ func load_game(
     customer_manager: CustomerManager,
     order_manager: ServiceOrderManager
 ) -> bool:
+
+    if (
+        game_manager == null
+        or vehicle_manager == null
+        or defect_manager == null
+        or inventory_manager == null
+        or customer_manager == null
+        or order_manager == null
+    ):
+        push_error("Nao foi possivel carregar: sistema nao inicializado.")
+        return false
 
     if not FileAccess.file_exists(SAVE_PATH):
         print("Nenhum save encontrado.")
@@ -75,7 +90,7 @@ func load_game(
     var error := parser.parse(content)
 
     if error != OK:
-        push_error("Arquivo de save invalido.")
+        push_error("Arquivo de save invalido: " + parser.get_error_message())
         return false
 
     var data: Variant = parser.data
@@ -85,7 +100,7 @@ func load_game(
         return false
 
     if int(data.get("save_version", -1)) != SAVE_VERSION:
-        push_error("Versao de save incompatível.")
+        push_error("Versao de save incompativel.")
         return false
 
     var player: Variant = data.get("player", {})
@@ -95,22 +110,15 @@ func load_game(
     var customers: Variant = data.get("customers", {})
     var orders: Variant = data.get("orders", {})
 
-    if not player is Dictionary:
-        return false
-
-    if not vehicles is Dictionary:
-        return false
-
-    if not defects is Dictionary:
-        return false
-
-    if not inventory is Dictionary:
-        return false
-
-    if not customers is Dictionary:
-        return false
-
-    if not orders is Dictionary:
+    if (
+        not player is Dictionary
+        or not vehicles is Dictionary
+        or not defects is Dictionary
+        or not inventory is Dictionary
+        or not customers is Dictionary
+        or not orders is Dictionary
+    ):
+        push_error("Dados internos do save estao invalidos.")
         return false
 
     game_manager.player_data = player.duplicate(true)
@@ -118,10 +126,9 @@ func load_game(
     defect_manager.vehicle_defects = defects.duplicate(true)
     inventory_manager.inventory = inventory.duplicate(true)
     customer_manager.customers = customers.duplicate(true)
-    order_manager.orders = orders.duplicate(true)
+    order_manager.service_orders = orders.duplicate(true)
 
     print("Jogo carregado com sucesso!")
-
     return true
 
 
